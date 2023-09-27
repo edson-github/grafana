@@ -14,24 +14,19 @@ def extract_zip(filename, target_dir):
 def get_nssm(tmpPath, version):
     if not os.path.isdir(tmpPath):
         os.mkdir(tmpPath)
-    target_filename = '{}/nssm-{}.zip'.format(tmpPath, version)
-    exists = os.path.isfile(target_filename)
-    if exists:
+    target_filename = f'{tmpPath}/nssm-{version}.zip'
+    if exists := os.path.isfile(target_filename):
         return target_filename
-    url = 'https://nssm.cc/release/nssm-{}.zip'.format(version)
-    print('NSSM url is {}'.format(url))
-    filename = wget.download(url, out=target_filename, bar=wget.bar_thermometer)
-    return filename
+    url = f'https://nssm.cc/release/nssm-{version}.zip'
+    print(f'NSSM url is {url}')
+    return wget.download(url, out=target_filename, bar=wget.bar_thermometer)
 
 
 def get_zip(version, target_filename):
-    exists = os.path.isfile(target_filename)
-    if exists:
+    if exists := os.path.isfile(target_filename):
         return target_filename
-    url = 'https://s3-us-west-2.amazonaws.com/grafana-releases/release/grafana-{}.windows-amd64.zip'.format(version)
-    #url = 'https://dl.grafana.com/enterprise/release/grafana-enterprise-{}.windows-amd64.zip'.format(version)
-    filename = wget.download(url, out=target_filename, bar=wget.bar_thermometer)
-    return filename
+    url = f'https://s3-us-west-2.amazonaws.com/grafana-releases/release/grafana-{version}.windows-amd64.zip'
+    return wget.download(url, out=target_filename, bar=wget.bar_thermometer)
 
 
 #
@@ -44,9 +39,9 @@ def detect_version(dist_path):
     print("Detecting Version...")
     # grafana-6.0.0-ca0bc2c5pre3.windows-amd64.zip
     # get files in directory matching pattern
-    fileList = glob.glob(dist_path + '/grafana*.windows-amd64.zip')
+    fileList = glob.glob(f'{dist_path}/grafana*.windows-amd64.zip')
     print(fileList)
-    if len(fileList) == 0:
+    if not fileList:
         print('Skipping detection, no matches')
         return
     firstFile = fileList[0]
@@ -84,35 +79,31 @@ def detect_version(dist_path):
 def generate_product_wxs(env, config, features, scratch_file, target_dir):
     template = env.get_template('common/product.wxs.j2')
     output = template.render(config=config, features=features)
-    fh = open(scratch_file, 'w')
-    fh.write(output)
-    fh.close()
+    with open(scratch_file, 'w') as fh:
+        fh.write(output)
     shutil.copy2(scratch_file, target_dir)
 
 def generate_service_wxs(env, grafana_version, scratch_file, target_dir, nssm_version='2.24'):
     template = env.get_template('common/grafana-service.wxs.j2')
     output = template.render(grafana_version=grafana_version, nssm_version=nssm_version)
-    fh = open(scratch_file, 'w')
-    fh.write(output)
-    fh.close()
+    with open(scratch_file, 'w') as fh:
+        fh.write(output)
     shutil.copy2(scratch_file, target_dir)
 
 def generate_firewall_wxs(env, grafana_version, scratch_file, target_dir):
     os.system("ls -al templates")
     template = env.get_template('common/grafana-firewall.wxs.j2')
     output = template.render(grafana_version=grafana_version)
-    fh = open(scratch_file, 'w')
-    fh.write(output)
-    fh.close()
+    with open(scratch_file, 'w') as fh:
+        fh.write(output)
     shutil.copy2(scratch_file, target_dir)
 
 
 def generate_oracle_environment_wxs(env, instant_client_version, scratch_file, target_dir):
     template = env.get_template('oracle/oracle-environment.wxs.j2')
     output = template.render(instant_client_version=instant_client_version)
-    fh = open(scratch_file, 'w')
-    fh.write(output)
-    fh.close()
+    with open(scratch_file, 'w') as fh:
+        fh.write(output)
     shutil.copy2(scratch_file, target_dir)
 
 def copy_static_files(target_dir):
